@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Footwear Competitor Radius Map — Country Club Plaza</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: #f8f7f4; color: #1a1a1a; }
+
+  .header { background: #1F1A50; color: #fff; padding: 24px 32px; }
+  .header h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 4px; }
+  .header .subtitle { font-size: 14px; color: rgba(255,255,255,0.9); margin-top: 2px; }
+  .header p { font-size: 13px; color: rgba(255,255,255,0.7); font-weight: 400; margin-top: 2px; }
+
+  #map { width: 100%; height: 560px; }
+
+  .legend-bar {
+    background: #fff; border-top: 1px solid #e5e3de; padding: 14px 32px;
+    display: flex; flex-wrap: wrap; gap: 20px; align-items: center;
+  }
+  .legend-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #999; margin-right: 4px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #444; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,0.15); flex-shrink: 0; }
+  .legend-ring { width: 12px; height: 12px; border-radius: 50%; border: 2px dashed; background: transparent; flex-shrink: 0; }
+
+  .table-section { padding: 24px 32px 40px; }
+  .table-section h2 { font-size: 16px; font-weight: 700; color: #1F1A50; margin-bottom: 4px; }
+  .table-section .table-sub { font-size: 12px; color: #888; margin-bottom: 16px; }
+
+  .comp-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .comp-table thead th {
+    background: #1F1A50; color: #fff; font-weight: 600; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 14px;
+    text-align: left; white-space: nowrap;
+  }
+  .comp-table thead th:first-child { border-radius: 6px 0 0 0; }
+  .comp-table thead th:last-child { border-radius: 0 6px 0 0; }
+
+  .comp-table tbody tr { border-bottom: 1px solid #eae8e3; }
+  .comp-table tbody tr:hover { background: #f5f4f1; }
+  .comp-table tbody tr.at-subject { background: #fef9f0; }
+  .comp-table tbody tr.at-subject:hover { background: #fdf3e0; }
+
+  .comp-table tbody td { padding: 10px 14px; vertical-align: middle; }
+  .comp-table tbody td.brand-cell { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+  .comp-table tbody td.addr-cell { color: #555; }
+  .comp-table tbody td.dist-cell { white-space: nowrap; }
+  .comp-table tbody td.sf-cell { white-space: nowrap; font-weight: 500; }
+  .comp-table tbody td.sf-cell.pending { color: #bbb; font-weight: 400; font-style: italic; }
+
+  .brand-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .at-tag { display: inline-block; background: #1F1A50; color: #fff; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px; letter-spacing: 0.3px; margin-left: 6px; vertical-align: middle; }
+
+  .info-bar { background: #fff; padding: 12px 32px; border-top: 1px solid #e5e3de; font-size: 12px; color: #888; }
+  .info-bar span { color: #1F1A50; font-weight: 500; }
+
+  .popup-brand { font-size: 14px; font-weight: 700; color: #1F1A50; margin-bottom: 4px; }
+  .popup-addr { font-size: 12px; color: #555; line-height: 1.4; }
+  .popup-dist { font-size: 11px; color: #999; margin-top: 4px; }
+  .popup-sf { font-size: 11px; color: #1F1A50; font-weight: 500; margin-top: 2px; }
+  .subject-label { background: #1F1A50; color: #fff; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; white-space: nowrap; letter-spacing: 0.3px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Footwear Competitor Radius Map</h1>
+  <div class="subtitle">Country Club Plaza — 4147-4275 W 167th St, Country Club Hills, IL 60478</div>
+  <p>Prepared by T. Dallas Smith & Company | CoStar + Google Places Data | March 30, 2026</p>
+</div>
+
+<div id="map"></div>
+
+<div class="legend-bar">
+  <div class="legend-title">Legend</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#E24B4A;width:14px;height:14px;"></div> Subject property</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#185FA5;"></div> Foot Locker</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#0F6E56;"></div> SNIPES</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#7B3FA0;"></div> JD Sports</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#D85A30;"></div> DTLR</div>
+  <div class="legend-item"><div class="legend-ring" style="border-color:#E24B4A;"></div> 1 mi</div>
+  <div class="legend-item"><div class="legend-ring" style="border-color:#BA7517;"></div> 3 mi</div>
+  <div class="legend-item"><div class="legend-ring" style="border-color:#185FA5;"></div> 5 mi</div>
+</div>
+
+<!-- COMPETITOR TABLE -->
+<div class="table-section">
+  <h2>Footwear Competitor Directory</h2>
+  <div class="table-sub">All identified footwear competitors sorted by distance from subject property. GLA sourced from CoStar where available.</div>
+
+  <table class="comp-table">
+    <thead>
+      <tr>
+        <th style="width:20%;">Brand</th>
+        <th style="width:35%;">Address</th>
+        <th style="width:18%;">Center / Location</th>
+        <th style="width:14%;">Distance</th>
+        <th style="width:13%;">Store GLA</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- AT SUBJECT -->
+      <tr class="at-subject">
+        <td class="brand-cell"><div class="brand-dot" style="background:#185FA5;"></div>Foot Locker <span class="at-tag">AT SUBJECT</span></td>
+        <td class="addr-cell">4151 W 167th St, Country Club Hills, IL 60478</td>
+        <td>Country Club Plaza</td>
+        <td class="dist-cell">0.04 mi</td>
+        <td class="sf-cell">14,000 SF</td>
+      </tr>
+      <tr class="at-subject">
+        <td class="brand-cell"><div class="brand-dot" style="background:#D85A30;"></div>DTLR <span class="at-tag">AT SUBJECT</span></td>
+        <td class="addr-cell">4159 W 167th St, Country Club Hills, IL 60478</td>
+        <td>Country Club Plaza</td>
+        <td class="dist-cell">0.01 mi</td>
+        <td class="sf-cell">6,500 SF</td>
+      </tr>
+
+      <!-- WITHIN 5 MILES -->
+      <tr>
+        <td class="brand-cell"><div class="brand-dot" style="background:#7B3FA0;"></div>JD Sports</td>
+        <td class="addr-cell">541 Orland Square Dr E10B, Orland Park, IL 60462</td>
+        <td>Orland Square Mall</td>
+        <td class="dist-cell">~5.2 mi NW</td>
+        <td class="sf-cell pending">Pending CoStar</td>
+      </tr>
+      <tr>
+        <td class="brand-cell"><div class="brand-dot" style="background:#185FA5;"></div>Foot Locker</td>
+        <td class="addr-cell">324 Orland Square Dr, Orland Park, IL 60462</td>
+        <td>Orland Square Mall</td>
+        <td class="dist-cell">~5.2 mi NW</td>
+        <td class="sf-cell pending">Pending CoStar</td>
+      </tr>
+      <tr>
+        <td class="brand-cell"><div class="brand-dot" style="background:#185FA5;"></div>Kids Foot Locker</td>
+        <td class="addr-cell">324 Orland Square Dr, Orland Park, IL 60462</td>
+        <td>Orland Square Mall</td>
+        <td class="dist-cell">~5.2 mi NW</td>
+        <td class="sf-cell pending">Pending CoStar</td>
+      </tr>
+      <tr>
+        <td class="brand-cell"><div class="brand-dot" style="background:#0F6E56;"></div>SNIPES</td>
+        <td class="addr-cell">4529 Lincoln Hwy, Matteson, IL 60443</td>
+        <td>Lincoln Hwy Strip</td>
+        <td class="dist-cell">~5.6 mi SE</td>
+        <td class="sf-cell pending">Pending CoStar</td>
+      </tr>
+
+      <!-- BEYOND 5 MILES -->
+      <tr>
+        <td class="brand-cell"><div class="brand-dot" style="background:#0F6E56;"></div>SNIPES</td>
+        <td class="addr-cell">4859 Cal Sag Rd, Crestwood, IL 60418</td>
+        <td>Cal Sag Rd</td>
+        <td class="dist-cell">~6.2 mi NE</td>
+        <td class="sf-cell pending">Pending CoStar</td>
+      </tr>
+      <tr>
+        <td class="brand-cell"><div class="brand-dot" style="background:#D85A30;"></div>DTLR</td>
+        <td class="addr-cell">17840 S Halsted St, Homewood, IL 60430</td>
+        <td>Washington Park Plaza</td>
+        <td class="dist-cell">~9.2 mi SE</td>
+        <td class="sf-cell pending">Pending CoStar</td>
+      </tr>
+      <tr>
+        <td class="brand-cell"><div class="brand-dot" style="background:#0F6E56;"></div>SNIPES</td>
+        <td class="addr-cell">444 Chicago Ridge Mall, Chicago Ridge, IL 60415</td>
+        <td>Chicago Ridge Mall</td>
+        <td class="dist-cell">~9.8 mi N</td>
+        <td class="sf-cell pending">Pending CoStar</td>
+      </tr>
+      <tr>
+        <td class="brand-cell"><div class="brand-dot" style="background:#185FA5;"></div>Foot Locker</td>
+        <td class="addr-cell">200 Chicago Ridge Mall, Chicago Ridge, IL 60415</td>
+        <td>Chicago Ridge Mall</td>
+        <td class="dist-cell">~10 mi N</td>
+        <td class="sf-cell pending">Pending CoStar</td>
+      </tr>
+      <tr>
+        <td class="brand-cell"><div class="brand-dot" style="background:#D85A30;"></div>DTLR</td>
+        <td class="addr-cell">125 Joe Orr Rd, Chicago Heights, IL 60411</td>
+        <td>Olympia Plaza</td>
+        <td class="dist-cell">~10.5 mi SE</td>
+        <td class="sf-cell pending">Pending CoStar</td>
+      </tr>
+      <tr>
+        <td class="brand-cell"><div class="brand-dot" style="background:#D85A30;"></div>DTLR</td>
+        <td class="addr-cell">1730 W 119th St, Chicago, IL 60643</td>
+        <td>Marshfield Plaza</td>
+        <td class="dist-cell">~11 mi NE</td>
+        <td class="sf-cell pending">Pending CoStar</td>
+      </tr>
+      <tr>
+        <td class="brand-cell"><div class="brand-dot" style="background:#D85A30;"></div>DTLR</td>
+        <td class="addr-cell">841 W 115th St, Chicago, IL 60643</td>
+        <td>Maple Park Marketplace</td>
+        <td class="dist-cell">~12 mi NE</td>
+        <td class="sf-cell pending">Pending CoStar</td>
+      </tr>
+      <tr>
+        <td class="brand-cell"><div class="brand-dot" style="background:#0F6E56;"></div>SNIPES</td>
+        <td class="addr-cell">9518 S Western Ave, Evergreen Park, IL 60805</td>
+        <td>95th & Western</td>
+        <td class="dist-cell">~12 mi NE</td>
+        <td class="sf-cell pending">Pending CoStar</td>
+      </tr>
+      <tr>
+        <td class="brand-cell"><div class="brand-dot" style="background:#0F6E56;"></div>SNIPES</td>
+        <td class="addr-cell">96 River Oaks Center Dr, Calumet City, IL 60409</td>
+        <td>River Oaks Center</td>
+        <td class="dist-cell">~14 mi E</td>
+        <td class="sf-cell pending">Pending CoStar</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="info-bar">
+  <span>Note:</span> Footaction (absorbed into Foot Locker), Jimmy Jazz (absorbed into DTLR), and City Gear (no Chicagoland presence) have no standalone locations in this market. Store GLA will be updated upon receipt of expanded 10-mile CoStar radius report.
+</div>
+
+<!-- MAP SCRIPT -->
+<script>
+var subjectLat = 41.5812, subjectLng = -87.7275;
+var map = L.map('map', { zoomControl: true }).setView([subjectLat, subjectLng], 11);
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OpenStreetMap &copy; CARTO', maxZoom: 18
+}).addTo(map);
+
+function milesToMeters(mi) { return mi * 1609.34; }
+
+[
+  { r:1, color:'#E24B4A' },
+  { r:3, color:'#BA7517' },
+  { r:5, color:'#185FA5' }
+].forEach(function(s) {
+  L.circle([subjectLat, subjectLng], {
+    radius: milesToMeters(s.r), color: s.color, weight: 2, dashArray: '8,6',
+    fillOpacity: 0.03, fillColor: s.color
+  }).addTo(map).bindPopup('<b>' + s.r + '-mile radius</b>');
+});
+
+function makePin(color, letter) {
+  return L.divIcon({
+    className: '',
+    html: '<div style="width:28px;height:28px;border-radius:50%;background:'+color+';border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;font-family:DM Sans,sans-serif;">'+letter+'</div>',
+    iconSize:[28,28], iconAnchor:[14,14], popupAnchor:[0,-16]
+  });
+}
+
+function subjectPin() {
+  return L.divIcon({
+    className: '',
+    html: '<div style="display:flex;flex-direction:column;align-items:center;"><div class="subject-label">SUBJECT</div><div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:6px solid #1F1A50;margin-top:-1px;"></div><div style="width:16px;height:16px;border-radius:50%;background:#E24B4A;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.4);margin-top:2px;"></div></div>',
+    iconSize:[80,48], iconAnchor:[40,48], popupAnchor:[0,-50]
+  });
+}
+
+L.marker([subjectLat, subjectLng], { icon:subjectPin(), zIndexOffset:1000 }).addTo(map)
+  .bindPopup('<div class="popup-brand">COUNTRY CLUB PLAZA</div><div class="popup-addr">4147-4275 W 167th St<br>Country Club Hills, IL 60478</div><div class="popup-sf">77,200 SF Total GLA | 91.1% Leased</div><div class="popup-dist">Foot Locker (14,000 SF) + DTLR (6,500 SF) in-place</div>');
+
+var competitors = [
+  { brand:'Foot Locker', letter:'FL', lat:41.5812, lng:-87.7268, addr:'4151 W 167th St, Country Club Hills, IL', color:'#185FA5', dist:'At subject', sf:'14,000 SF' },
+  { brand:'DTLR', letter:'D', lat:41.5815, lng:-87.7260, addr:'4159 W 167th St, Country Club Hills, IL', color:'#D85A30', dist:'At subject', sf:'6,500 SF' },
+  { brand:'JD Sports', letter:'JD', lat:41.6203, lng:-87.8487, addr:'541 Orland Square Dr, Orland Park, IL', color:'#7B3FA0', dist:'~5.2 mi NW', sf:'' },
+  { brand:'Foot Locker', letter:'FL', lat:41.6201, lng:-87.8492, addr:'324 Orland Square Dr, Orland Park, IL', color:'#185FA5', dist:'~5.2 mi NW', sf:'' },
+  { brand:'Kids Foot Locker', letter:'KF', lat:41.6205, lng:-87.8497, addr:'324 Orland Square Dr, Orland Park, IL', color:'#185FA5', dist:'~5.2 mi NW', sf:'' },
+  { brand:'SNIPES', letter:'S', lat:41.5053, lng:-87.7258, addr:'4529 Lincoln Hwy, Matteson, IL', color:'#0F6E56', dist:'~5.6 mi SE', sf:'' },
+  { brand:'SNIPES', letter:'S', lat:41.6538, lng:-87.7414, addr:'4859 Cal Sag Rd, Crestwood, IL', color:'#0F6E56', dist:'~6.2 mi NE', sf:'' },
+  { brand:'DTLR', letter:'D', lat:41.5655, lng:-87.6384, addr:'17840 S Halsted St, Homewood, IL', color:'#D85A30', dist:'~9.2 mi SE', sf:'' },
+  { brand:'SNIPES', letter:'S', lat:41.7146, lng:-87.7831, addr:'444 Chicago Ridge Mall, Chicago Ridge, IL', color:'#0F6E56', dist:'~9.8 mi N', sf:'' },
+  { brand:'Foot Locker', letter:'FL', lat:41.7167, lng:-87.7829, addr:'200 Chicago Ridge Mall, Chicago Ridge, IL', color:'#185FA5', dist:'~10 mi N', sf:'' },
+  { brand:'DTLR', letter:'D', lat:41.5214, lng:-87.6469, addr:'125 Joe Orr Rd, Chicago Heights, IL', color:'#D85A30', dist:'~10.5 mi SE', sf:'' },
+  { brand:'DTLR', letter:'D', lat:41.6783, lng:-87.6653, addr:'1730 W 119th St, Chicago, IL', color:'#D85A30', dist:'~11 mi NE', sf:'' },
+  { brand:'DTLR', letter:'D', lat:41.6837, lng:-87.644, addr:'841 W 115th St, Chicago, IL', color:'#D85A30', dist:'~12 mi NE', sf:'' },
+  { brand:'SNIPES', letter:'S', lat:41.7202, lng:-87.6835, addr:'9518 S Western Ave, Evergreen Park, IL', color:'#0F6E56', dist:'~12 mi NE', sf:'' },
+  { brand:'SNIPES', letter:'S', lat:41.598, lng:-87.5553, addr:'96 River Oaks Center Dr, Calumet City, IL', color:'#0F6E56', dist:'~14 mi E', sf:'' }
+];
+
+competitors.forEach(function(c) {
+  var sfLine = c.sf ? '<div class="popup-sf">' + c.sf + '</div>' : '';
+  L.marker([c.lat, c.lng], { icon: makePin(c.color, c.letter) }).addTo(map)
+    .bindPopup('<div class="popup-brand">' + c.brand + '</div><div class="popup-addr">' + c.addr + '</div>' + sfLine + '<div class="popup-dist">' + c.dist + '</div>');
+});
+</script>
+
+</body>
+</html>
